@@ -1,9 +1,9 @@
 #!/bin/bash
 set -e  # Exit on error
 
-# Install requirements
+# Install requirements with --no-deps to avoid conflicts with Streamlit Cloud's environment
 pip install --upgrade pip
-pip install -r requirements.txt
+pip install --no-deps -r requirements.txt
 
 # Verify core dependencies
 python -c "
@@ -16,4 +16,5 @@ for pkg in ['streamlit', 'pandas', 'numpy', 'sqlalchemy']:
         print(f'❌ {pkg} import failed: {e}', file=sys.stderr)
         sys.exit(1)
 "
+
 
