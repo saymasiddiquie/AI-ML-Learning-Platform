@@ -4,6 +4,7 @@ pandas
 numpy
 Pillow
 PyPDF2
+pip install --upgrade pip
 python-dotenv
 SQLAlchemy
 requests
