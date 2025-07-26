@@ -553,8 +553,25 @@ def show_home():
 def show_leaderboard():
     st.header("🏆 Leaderboard")
     
+    # Add a refresh button
+    if st.button("🔄 Refresh Leaderboard"):
+        # Clear any cached data
+        if 'leaderboard_data' in st.session_state:
+            del st.session_state.leaderboard_data
+        st.rerun()
+    
     # Get top users with their rank
-    users = session.query(User).order_by(User.score.desc(), User.last_quiz_date.desc()).limit(10).all()
+    if 'leaderboard_data' not in st.session_state:
+        # Create a new session to ensure we get fresh data
+        fresh_session = sessionmaker(bind=engine)()
+        users = fresh_session.query(User).order_by(
+            User.score.desc(), 
+            User.last_quiz_date.desc()
+        ).limit(10).all()
+        fresh_session.close()
+        st.session_state.leaderboard_data = users
+    else:
+        users = st.session_state.leaderboard_data
     
     # Create leaderboard data with rank
     leaderboard_data = []
@@ -798,21 +815,44 @@ def show_quiz():
                 score += 1
         
         # Update user score
-        user = session.query(User).filter_by(id=st.session_state.user_id).first()
-        if user:
-            # Add to existing score instead of replacing it
-            user.score += score
-            user.last_quiz_date = datetime.utcnow()
-            try:
-                session.commit()
-                st.toast(f"Score updated! You earned {score} points!")
-            except Exception as e:
-                session.rollback()
-                st.error(f"Error updating score: {str(e)}")
-        
-        st.session_state.quiz_score = score
-        st.session_state.quiz_completed = True
-        st.rerun()
+        try:
+            # Start a new session to avoid any stale data
+            new_session = sessionmaker(bind=engine)()
+            user = new_session.query(User).filter_by(id=st.session_state.user_id).with_for_update().first()
+            
+            if user:
+                # Calculate new score (add to existing score)
+                new_score = user.score + score
+                
+                # Update user's score and last quiz date
+                user.score = new_score
+                user.last_quiz_date = datetime.utcnow()
+                
+                # Commit the changes
+                new_session.commit()
+                
+                # Update session state
+                st.session_state.quiz_score = score
+                st.session_state.quiz_completed = True
+                
+                # Show success message
+                st.toast(f"Score updated! You earned {score} points! Total score: {new_score}")
+                
+                # Clear any cached data that might be stale
+                if 'all_quizzes' in st.session_state:
+                    del st.session_state.all_quizzes
+                if 'quizzes' in st.session_state:
+                    del st.session_state.quizzes
+                
+                # Force a rerun to refresh the UI
+                st.rerun()
+                return
+                
+        except Exception as e:
+            if 'new_session' in locals():
+                new_session.rollback()
+            st.error(f"Error updating score: {str(e)}")
+            st.stop()
     
     # Display score if quiz is completed
     if st.session_state.get('quiz_completed', False):
@@ -1273,4 +1313,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
