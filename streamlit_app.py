@@ -574,12 +574,23 @@ def show_leaderboard():
     # Create leaderboard data with rank
     leaderboard_data = []
     for rank, user in enumerate(users, 1):
+        # Ensure username is not None and is a string
+        username = str(user.username) if user.username is not None else 'Unknown'
+        
+        # Handle last_quiz_date safely
+        if user.last_quiz_date:
+            last_active = user.last_quiz_date.strftime('%Y-%m-%d')
+            days_since = (datetime.utcnow() - user.last_quiz_date).days
+        else:
+            last_active = 'Never'
+            days_since = float('inf')
+            
         leaderboard_data.append({
             'Rank': rank,
-            'Username': user.username,
-            'Score': user.score,
-            'Last Active': user.last_quiz_date.strftime('%Y-%m-%d') if user.last_quiz_date else 'Never',
-            'Days Since Last Quiz': (datetime.utcnow() - user.last_quiz_date).days if user.last_quiz_date else float('inf')
+            'Username': username,
+            'Score': user.score if user.score is not None else 0,
+            'Last Active': last_active,
+            'Days Since Last Quiz': days_since
         })
     
     if not leaderboard_data:
