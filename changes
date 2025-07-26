@@ -1,0 +1,3 @@
+git add setup.sh
+git commit -m "Update setup.sh to handle pip installation more robustly"
+git push origin main
