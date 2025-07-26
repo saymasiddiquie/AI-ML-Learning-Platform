@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="jumbotron text-center mb-4">
+    <h1 class="display-4">Welcome to AI/ML World</h1>
+    <p class="lead">Explore the fascinating world of Artificial Intelligence and Machine Learning</p>
+</div>
+
+<div class="row">
+    <!-- Interesting AI/ML Topics Section -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4>AI in Western Culture</h4>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Decoding Iron Man's JARVIS</h5>
+                <p class="card-text">
+                    JARVIS (Just A Rather Very Intelligent System) is one of the most iconic AI systems in modern cinema. 
+                    This section explores the real-world technologies that inspired JARVIS and how they're being implemented today.
+                </p>
+                <a href="#" class="btn btn-primary">Learn More</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured Quiz Section -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h4>Featured Quiz</h4>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">AI Fundamentals Quiz</h5>
+                <p class="card-text">
+                    Test your knowledge about AI and ML basics with our interactive quiz.
+                    Perfect for beginners and professionals alike!
+                </p>
+                <a href="{{ url_for('quiz') }}" class="btn btn-success">Take Quiz</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Newsletter Section -->
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h4>Latest AI/ML Newsletter</h4>
+    </div>
+    <div class="card-body">
+        <h5 class="card-title">Daily AI Insights</h5>
+        <p class="card-text">
+            Stay updated with the latest developments in AI and ML.
+            Subscribe to our daily newsletter for key insights and trends.
+        </p>
+        <a href="{{ url_for('newsletter') }}" class="btn btn-info">View Newsletter</a>
+    </div>
+</div>
+
+<!-- AI/ML Applications Section -->
+<div class="card mb-4">
+    <div class="card-header bg-warning text-white">
+        <h4>Real-World AI Applications</h4>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <h6>Healthcare</h6>
+                <p>AI in medical diagnosis and personalized treatment</p>
+            </div>
+            <div class="col-md-4">
+                <h6>Finance</h6>
+                <p>Algorithmic trading and fraud detection</p>
+            </div>
+            <div class="col-md-4">
+                <h6>Entertainment</h6>
+                <p>AI in content creation and recommendation systems</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

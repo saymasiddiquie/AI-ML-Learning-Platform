@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Newsletter{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-info text-white">
+        <h4>AI/ML Newsletter</h4>
+    </div>
+    <div class="card-body">
+        {% for newsletter in newsletters %}
+        <div class="newsletter-item mb-4">
+            <h5>{{ newsletter.title }}</h5>
+            <small class="text-muted">Posted on: {{ newsletter.date_posted.strftime('%Y-%m-%d') }}</small>
+            <div class="mt-2">
+                {{ newsletter.content }}
+            </div>
+            <hr>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,119 @@
+/* Custom styles for AI/ML World */
+
+body {
+    background-color: #f8f9fa;
+}
+
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+.jumbotron {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    padding: 4rem 2rem;
+    border-radius: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+.card {
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,.05);
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card-header {
+    border-bottom: none;
+}
+
+.card-header h4 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.card-body {
+    padding: 2rem;
+}
+
+.btn {
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.3rem;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #0056b3, #003d82);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745, #1e7e34);
+    border: none;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #1e7e34, #155724);
+}
+
+.btn-info {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    border: none;
+}
+
+.btn-info:hover {
+    background: linear-gradient(135deg, #138496, #0f6272);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #ffc107, #e0a800);
+    border: none;
+}
+
+.btn-warning:hover {
+    background: linear-gradient(135deg, #e0a800, #c79800);
+}
+
+.footer {
+    margin-top: 4rem;
+    padding: 2rem 0;
+}
+
+/* Quiz specific styles */
+.quiz-item {
+    padding: 1rem;
+    background: white;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,.05);
+}
+
+.form-check {
+    margin-bottom: 0.5rem;
+}
+
+/* Newsletter styles */
+.newsletter-item {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,.05);
+}
+
+.newsletter-item h5 {
+    color: #0056b3;
+    margin-bottom: 0.5rem;
+}
+
+.newsletter-item small {
+    display: block;
+    margin-bottom: 1rem;
+}
