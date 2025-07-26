@@ -551,27 +551,112 @@ def show_home():
             st.rerun()
 
 def show_leaderboard():
-    st.header("Leaderboard")
+    st.header("🏆 Leaderboard")
     
-    # Get top users
-    users = session.query(User).order_by(User.score.desc()).limit(10).all()
+    # Get top users with their rank
+    users = session.query(User).order_by(User.score.desc(), User.last_quiz_date.desc()).limit(10).all()
     
-    # Create leaderboard data
-    leaderboard_data = {
-        'Username': [user.username for user in users],
-        'Score': [user.score for user in users],
-        'Last Quiz': [user.last_quiz_date.strftime('%Y-%m-%d') if user.last_quiz_date else '-' for user in users]
-    }
+    # Create leaderboard data with rank
+    leaderboard_data = []
+    for rank, user in enumerate(users, 1):
+        leaderboard_data.append({
+            'Rank': rank,
+            'Username': user.username,
+            'Score': user.score,
+            'Last Active': user.last_quiz_date.strftime('%Y-%m-%d') if user.last_quiz_date else 'Never',
+            'Days Since Last Quiz': (datetime.utcnow() - user.last_quiz_date).days if user.last_quiz_date else float('inf')
+        })
+    
+    if not leaderboard_data:
+        st.info("No quiz results yet. Be the first to take the quiz!")
+        return
     
     # Create DataFrame
     df = pd.DataFrame(leaderboard_data)
     
-    # Display table
-    st.dataframe(df)
+    # Highlight current user's row if logged in
+    def highlight_user(row):
+        if 'username' in st.session_state and row['Username'] == st.session_state.username:
+            return ['background-color: #e6f3ff'] * len(row)
+        return [''] * len(row)
     
-    # Create bar chart
-    fig = px.bar(df, x='Username', y='Score', title='Top Users by Score')
-    st.plotly_chart(fig)
+    # Display styled table
+    st.subheader("Top Performers")
+    st.dataframe(
+        df[['Rank', 'Username', 'Score', 'Last Active']].style.apply(highlight_user, axis=1),
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            'Rank': st.column_config.NumberColumn(width='small'),
+            'Username': st.column_config.TextColumn(width='medium'),
+            'Score': st.column_config.ProgressColumn(
+                'Score',
+                help='Total quiz score',
+                format='%d',
+                min_value=0,
+                max_value=df['Score'].max() * 1.1  # 10% buffer for visual appeal
+            ),
+            'Last Active': st.column_config.DateColumn(
+                'Last Active',
+                format='YYYY-MM-DD',
+                help='Last time the user took a quiz'
+            )
+        }
+    )
+    
+    # Show additional stats if user is logged in
+    if 'user_id' in st.session_state:
+        user_rank = df[df['Username'] == st.session_state.username].index
+        if not user_rank.empty:
+            rank = user_rank[0] + 1
+            user_score = df.loc[user_rank[0], 'Score']
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Your Rank", f"#{rank} of {len(users)}")
+            with col2:
+                st.metric("Your Score", user_score)
+            
+            # Show progress to next rank if not first
+            if rank > 1:
+                if rank > 2:
+                    score_to_next = df.loc[rank-2, 'Score'] - user_score + 1
+                    st.progress(
+                        min(1.0, user_score / (score_to_next + user_score)),
+                        f"You need {score_to_next} more points to reach rank {rank-1}"
+                    )
+    
+    # Create interactive bar chart
+    st.subheader("Score Distribution")
+    fig = px.bar(
+        df.head(10),  # Show top 10
+        x='Username',
+        y='Score',
+        color='Score',
+        color_continuous_scale='Viridis',
+        title='Top 10 Users by Score',
+        labels={'Score': 'Total Score', 'Username': 'User'}
+    )
+    
+    # Customize the chart
+    fig.update_layout(
+        xaxis_tickangle=-45,
+        yaxis_title='Total Score',
+        coloraxis_showscale=False,
+        hovermode='x unified'
+    )
+    
+    # Add horizontal line at average score if there are enough users
+    if len(df) > 2:
+        avg_score = df['Score'].mean()
+        fig.add_hline(
+            y=avg_score,
+            line_dash='dash',
+            line_color='red',
+            annotation_text=f'Average: {avg_score:.1f}'
+        )
+    
+    st.plotly_chart(fig, use_container_width=True)
 
 def show_quiz():
     st.header("AI/ML Quiz")
@@ -715,9 +800,15 @@ def show_quiz():
         # Update user score
         user = session.query(User).filter_by(id=st.session_state.user_id).first()
         if user:
-            user.score = score
+            # Add to existing score instead of replacing it
+            user.score += score
             user.last_quiz_date = datetime.utcnow()
-            session.commit()
+            try:
+                session.commit()
+                st.toast(f"Score updated! You earned {score} points!")
+            except Exception as e:
+                session.rollback()
+                st.error(f"Error updating score: {str(e)}")
         
         st.session_state.quiz_score = score
         st.session_state.quiz_completed = True
@@ -1088,20 +1179,36 @@ def show_login():
     password = st.sidebar.text_input("Password", type="password")
     
     if st.sidebar.button("Login"):
-        # Simple admin check (in production, use proper authentication)
+        # Admin login
         if username == "admin" and password == "admin123":  # Change these credentials in production
-            st.session_state.user_id = 1
+            # Check if admin user exists, if not create it
+            admin = session.query(User).filter_by(username="admin").first()
+            if not admin:
+                admin = User(username="admin", score=0, last_quiz_date=datetime.utcnow())
+                session.add(admin)
+                session.commit()
+            
+            st.session_state.user_id = admin.id
             st.session_state.is_admin = True
+            st.session_state.username = "admin"
             st.sidebar.success("Logged in as Admin")
             st.rerun()
+            
         elif username and password:  # Regular user
-            # For demo, any non-admin credentials will work as regular user
-            st.session_state.user_id = hash(username)  # Simple user ID generation
+            # Check if user exists, if not create new user
+            user = session.query(User).filter_by(username=username).first()
+            if not user:
+                user = User(username=username, score=0, last_quiz_date=datetime.utcnow())
+                session.add(user)
+                session.commit()
+            
+            st.session_state.user_id = user.id
             st.session_state.is_admin = False
-            st.sidebar.success(f"Welcome, {username}!")
+            st.session_state.username = username
+            st.sidebar.success(f"Welcome back, {username}!")
             st.rerun()
         else:
-            st.sidebar.error("Invalid credentials")
+            st.sidebar.error("Please enter both username and password")
     
     if st.session_state.user_id:
         if st.sidebar.button("Logout"):
@@ -1166,3 +1273,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
